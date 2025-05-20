@@ -43,8 +43,7 @@ const [searchQuery, setSearchQuery] = useState("");
                 <button type="submit" className="search-button">Search</button>
             </form>
             <div className="movie-list">
-                {movies.map(movie => 
-                    movie.title.toLowerCase().startsWith(searchQuery) && <MovieCard key={movie.id} movie={movie} />)} 
+                {movies.map(movie => <MovieCard key={movie.id} movie={movie} />)} 
             </div>
         </div>
     );
