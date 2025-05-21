@@ -1,33 +1,66 @@
 import MovieCard from "../components/MovieCard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import "../css/Home.css";
+import { searchMovies, getPopularMovies } from "../services/api";
 
 function Home() {
-const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [movies, setMovies] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const movies = [
-        {
-            id: 1,
-            title: "Inception",
-            releaseDate: 2010,
-            imageUrl: "https://example.com/inception.jpg"
-        },
-        {
-            id: 2,
-            title: "The Dark Knight",
-            releaseDate: 2008,
-            imageUrl: "https://example.com/dark-knight.jpg"
-        },
-        {
-            id: 3,
-            title: "Interstellar",
-            releaseDate: 2014,
-            imageUrl: "https://example.com/interstellar.jpg"
+    useEffect(() => {
+        const loadPopularMovies = async () => {
+            try {
+                setLoading(true);
+                const popularMovies = await getPopularMovies();
+                setMovies(popularMovies);
+            } catch (err) {
+                console.error(err);
+                setError("Failed to load movies. Please try again later.");
+            } finally {
+                setLoading(false);
+            }
         }
-    ]
 
-    const handleSearch = (e) => {
+        loadPopularMovies();
+    }, []);
+
+    useEffect(() => {
+        const loadPopularMovies = async () => {
+          try {
+            const popularMovies = await getPopularMovies();
+            setMovies(popularMovies);
+          } catch (err) {
+            console.log(err);
+            setError("Failed to load movies...");
+          } finally {
+            setLoading(false);
+          }
+        };
+    
+        loadPopularMovies();
+    }, []);
+
+    const handleSearch = async (e) => {
         e.preventDefault();
-        alert(`Searching for: ${searchQuery}`);
+        if(!searchQuery.trim()) return;
+        if(loading) return;
+
+        setLoading(true);
+
+        try{
+            const searchResults = await searchMovies(searchQuery);
+            setMovies(searchResults);
+            setError(null);
+        }
+        catch(err){
+            console.error(err);
+            setError("Failed to search movies. Please try again later.");
+        }
+        finally{
+            setLoading(false);
+        }
     }
 
     return (
@@ -42,9 +75,20 @@ const [searchQuery, setSearchQuery] = useState("");
                 />
                 <button type="submit" className="search-button">Search</button>
             </form>
-            <div className="movie-list">
-                {movies.map(movie => <MovieCard key={movie.id} movie={movie} />)} 
-            </div>
+
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
+            )}
+
+            { loading? (
+                <div>Loading...</div>
+            ) : (
+                <div className="movie-list">
+                    {movies.map(movie => <MovieCard key={movie.id} movie={movie} />)} 
+                </div>
+            )}
         </div>
     );
 }
